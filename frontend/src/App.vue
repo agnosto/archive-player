@@ -10,8 +10,18 @@
       
       <!-- Logo and title (hidden on mobile when menu closed) -->
       <div class="logo-container" :class="{ 'mobile-hidden': !mobileMenuOpen }">
-        <img src="./assets/logo.svg" alt="Archive Player Logo" class="logo" />
-        <h1>Archive Player</h1>
+        <img 
+          src="./assets/logo.svg" 
+          alt="Archive Player Logo" 
+          class="logo clickable" 
+          @click="resetPlayer" 
+          title="Reset player"
+        />
+        <h1 
+          class="clickable" 
+          @click="resetPlayer" 
+          title="Reset player"
+        >Archive Player</h1>
       </div>
       
       <!-- Controls (desktop only) -->
@@ -45,8 +55,18 @@
       <div class="mobile-menu" :class="{ 'mobile-menu-open': mobileMenuOpen }">
         <!-- Logo and title in mobile menu -->
         <div class="mobile-menu-header">
-          <img src="./assets/logo.svg" alt="Archive Player Logo" class="logo" />
-          <h1>Archive Player</h1>
+          <img 
+            src="./assets/logo.svg" 
+            alt="Archive Player Logo" 
+            class="logo clickable" 
+            @click="resetPlayer" 
+            title="Reset player"
+          />
+          <h1 
+            class="clickable" 
+            @click="resetPlayer" 
+            title="Reset player"
+          >Archive Player</h1>
         </div>
         
         <div class="mobile-menu-buttons">
@@ -304,9 +324,44 @@ export default defineComponent({
       showIntegrationsMenu.value = false;
     };
 
+    const resetVideoState = () => {
+      // Reset video-related state
+      videoSrc.value = '';
+      videoLoaded.value = false;
+      currentTime.value = 0;
+      
+      // Reset chat-related state
+      resetChat();
+    };
+
+    const resetPlayer = () => {
+      // Reset video state
+      resetVideoState();
+      
+      // Reset UI states
+      showSettings.value = false;
+      showRecentVideos.value = false;
+      showFanslyBrowser.value = false;
+      showAnyOtherIntegration.value = false;
+      theaterMode.value = false;
+      
+      // Reset video info
+      videoInfo.value = { filename: '', path: '' };
+      
+      // Close mobile menu if open
+      if (mobileMenuOpen.value) {
+        toggleMobileMenu();
+      }
+      
+      console.log('Player state reset');
+    };
+
     const loadFanslyStream = async (result: any) => {
       if (result.success) {
         try {
+          // Reset current video state first
+          resetVideoState();
+          
           // Load the video using the same function as loadRecentVideo
           const videoPath = await LoadVideoFromPath(result.videoPath);
           videoSrc.value = videoPath;
@@ -445,6 +500,9 @@ export default defineComponent({
 
     const openVideoFile = async () => {
       try {
+        // Reset current video state first
+        resetVideoState();
+        
         const videoUrl = await OpenVideoFile();
         if (videoUrl) {
           videoSrc.value = videoUrl;
@@ -453,9 +511,6 @@ export default defineComponent({
           // Get video file info
           const info = await GetVideoFileInfo();
           videoInfo.value = info;
-          
-          // Reset chat when loading a new video
-          resetChat();
           
           // Add to recent videos
           addToRecentVideos(info);
@@ -609,6 +664,9 @@ export default defineComponent({
     // Function to load a video from recent videos
     const loadRecentVideo = async (video: RecentVideo) => {
       try {
+        // Reset current video state first
+        resetVideoState();
+        
         // Load the video
         const videoPath = await LoadVideoFromPath(video.path);
         console.log("Video loaded from recent:", videoPath);
@@ -742,7 +800,9 @@ export default defineComponent({
       activeIntegration,
       selectIntegration,
       showAnyOtherIntegration,
-      toggleIntegrationPanel
+      toggleIntegrationPanel,
+      resetVideoState,
+      resetPlayer
     };
   }
 });
@@ -750,6 +810,18 @@ export default defineComponent({
 
 
 <style>
+.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.clickable:hover {
+  transform: scale(1.05);
+}
+
+h1.clickable:hover {
+  color: #b4befe; /* Catppuccin Mocha lavender - a slightly different color on hover */
+}
 /* Mobile-first approach */
 @media (max-width: 768px) {
   .header h1 {
