@@ -22,7 +22,17 @@
             </svg>
             <span class="tip-amount">${{ formatTipAmount(message.tip_amount) }}</span>
           </div>
-          {{ message.message }}
+          
+          <!-- Display embedded GIF if it's a Tenor link -->
+          <div v-if="isTenorGif(message.message)" class="gif-container">
+            <img :src="extractGifUrl(message.message)" alt="GIF" class="embedded-gif" />
+            <div class="gif-overlay" @click="copyGifLink(message.message, $event)">
+              <span class="copy-hint">Click to copy link</span>
+            </div>
+            <span v-if="copiedMessageId === message.message_id" class="copied-indicator">Copied!</span>
+          </div>
+          <!-- Otherwise display regular message -->
+          <span v-else>{{ message.message }}</span>
         </div>
       </div>
     </div>
@@ -49,6 +59,7 @@ export default defineComponent({
     const chatContainer = ref<HTMLElement | null>(null);
     const displayedMessages = ref<ChatMessage[]>([]);
     const isAutoScrolling = ref(true);
+    const copiedMessageId = ref<string | null>(null);
     
     // Extract username from raw_data
     const getUsername = (message: ChatMessage): string | null => {
@@ -74,6 +85,70 @@ export default defineComponent({
         console.error("Error parsing raw_data:", error);
         return null;
       }
+    };
+
+    // Check if message is a Tenor GIF link
+    const isTenorGif = (message: string): boolean => {
+      return message.trim().startsWith('https://tenor.com/view/');
+    };
+
+    // Extract GIF URL from raw_data if available, otherwise return a placeholder
+    const extractGifUrl = (message: string): string => {
+      // Default to a placeholder if we can't extract the GIF
+      let gifUrl = '';
+      
+      try {
+        // Try to find the GIF URL in the raw data of the corresponding message
+        const matchingMessage = props.messages.find(m => m.message === message);
+        
+        if (matchingMessage && matchingMessage.raw_data) {
+          const rawDataObj = JSON.parse(matchingMessage.raw_data);
+          if (rawDataObj.event) {
+            const eventObj = JSON.parse(rawDataObj.event);
+            if (eventObj.chatRoomMessage && eventObj.chatRoomMessage.embeds && eventObj.chatRoomMessage.embeds.length > 0) {
+              const embed = eventObj.chatRoomMessage.embeds[0];
+              if (embed.data) {
+                const embedData = JSON.parse(embed.data);
+                if (embedData.variants && embedData.variants.length > 0) {
+                  // Prefer GIF format if available
+                  const gifVariant = embedData.variants.find((v: any) => v.format === 'gif');
+                  if (gifVariant && gifVariant.proxyUrl) {
+                    gifUrl = gifVariant.proxyUrl;
+                  } else if (embedData.variants[0].proxyUrl) {
+                    // Fall back to the first variant if no GIF format
+                    gifUrl = embedData.variants[0].proxyUrl;
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error extracting GIF URL:", error);
+      }
+      
+      return gifUrl;
+    };
+
+    // Copy GIF link to clipboard with subtle visual feedback
+    const copyGifLink = (link: string, event: MouseEvent) => {
+      navigator.clipboard.writeText(link)
+        .then(() => {
+          // Find the message that contains this link
+          const message = props.messages.find(m => m.message === link);
+          if (message) {
+            // Set the copied message ID to show the indicator
+            copiedMessageId.value = message.message_id;
+            
+            // Clear the indicator after 2 seconds
+            setTimeout(() => {
+              copiedMessageId.value = null;
+            }, 2000);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to copy link: ', err);
+        });
     };
 
     // Convert hex color to rgba
@@ -177,7 +252,11 @@ export default defineComponent({
       chatContainer,
       displayedMessages,
       formatTipAmount,
-      getUsername
+      getUsername,
+      isTenorGif,
+      extractGifUrl,
+      copyGifLink,
+      copiedMessageId
     };
   }
 })
@@ -243,6 +322,69 @@ export default defineComponent({
 
 .tip-amount {
   font-weight: bold;
+}
+
+/* GIF styling */
+.gif-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin: 4px 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.embedded-gif {
+  max-width: 200px;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gif-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.gif-container:hover .gif-overlay {
+  opacity: 1;
+}
+
+.copy-hint {
+  color: white;
+  font-size: 0.8em;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.copied-indicator {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: rgba(46, 204, 113, 0.9);
+  color: white;
+  font-size: 0.75em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  animation: fadeOut 2s forwards;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Scrollbar styling */
