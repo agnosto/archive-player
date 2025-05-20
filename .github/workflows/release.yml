@@ -132,11 +132,20 @@ jobs:
     needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          
+      - name: List downloaded artifacts
+        run: |
+          ls -la artifacts
+          ls -la artifacts/ArchivePlayer-windows || echo "Windows artifacts not found"
+          ls -la artifacts/ArchivePlayer-linux || echo "Linux artifacts not found"
+          ls -la artifacts/ArchivePlayer-macos || echo "macOS artifacts not found"
           
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -147,4 +156,6 @@ jobs:
             artifacts/ArchivePlayer-macos/*
           draft: false
           prerelease: false
+          # If manually triggered without a tag, use a default name
+          tag_name: ${{ github.ref_name || format('manual-release-{0}', github.run_number) }}
 
