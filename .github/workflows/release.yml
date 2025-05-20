@@ -25,8 +25,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          
+      # Set up Go with the same version as your local development
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.2'
+          
+      # Install the correct version of garble
+      - name: Install garble
+        run: go install mvdan.cc/garble@latest
+        
+      # Use the wails-build-action with specified version
       - uses: dAppServer/wails-build-action@main
         with:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
           build-obfuscate: true
+          wails-version: "v2.9.0"
+          go-version: "1.24.2"
