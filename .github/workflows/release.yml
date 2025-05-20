@@ -26,11 +26,6 @@ jobs:
         with:
           submodules: recursive
           
-      # Set up Go with the same version as your local development
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24.2'
           
       # Install the correct version of garble
       - name: Install garble
@@ -42,4 +37,3 @@ jobs:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
           build-obfuscate: true
-          go-version: "1.24.2"
