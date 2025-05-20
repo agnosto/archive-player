@@ -8,6 +8,7 @@
   A <a href="https://archive.ragtag.moe/player">ragtag</a>-like player <br> with built-in integration for 
   <a href="https://github.com/agnosto/fansly-scraper">fansly-scraper</a> livestream VODs.
 </p>
+
 <p align="center">
     <small>built with <a href="https://wails.io">wails</a> (go version of tauri/electron, i know, sorry)</small>
     <br>
@@ -39,9 +40,14 @@ Archive Player includes integration with the Fansly Scraper tool, allowing you t
 - Automatically pairs videos with their chat logs and contact sheet thumbnails
 - Displays stream information including model name, date, and duration
 - Allows filtering and searching by model name or filename
+- Clip creation tool to extract segments (up to 5 minutes) from videos (requires FFmpeg)
 - Preserves all Archive Player features like theater mode and chat display options
 
 ## Development
+
+### Requirements
+
+- [FFmpeg](https://ffmpeg.org/download.html) is required for the clip creation feature
 
 ### Chat Format
 
@@ -89,8 +95,9 @@ Or from the fansly-scraper format:
 
 1. Install [Go](https://golang.org/doc/install) (1.24 or later)
 2. Install [Wails](https://wails.io/docs/gettingstarted/installation)
-3. Clone the repository
-4. Run `wails build` to build the application
+3. Install [FFmpeg](https://ffmpeg.org/download.html) for clip creation functionality
+4. Clone the repository
+5. Run `wails build` to build the application
 
 ### Creating New Integrations
 
@@ -122,3 +129,4 @@ If you find this tool useful and would like to support its development, you can 
     </td>
   </tr>
 </table>
+
