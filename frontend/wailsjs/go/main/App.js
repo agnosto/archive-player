@@ -10,8 +10,20 @@ export function BrowseForFolder(arg1) {
   return window['go']['main']['App']['BrowseForFolder'](arg1);
 }
 
+export function CreateClip(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CreateClip'](arg1, arg2, arg3);
+}
+
 export function GetAllChatMessages() {
   return window['go']['main']['App']['GetAllChatMessages']();
+}
+
+export function GetClips() {
+  return window['go']['main']['App']['GetClips']();
+}
+
+export function GetCurrentClipsDir() {
+  return window['go']['main']['App']['GetCurrentClipsDir']();
 }
 
 export function GetFanslyConfig() {
@@ -46,10 +58,18 @@ export function OpenChatFile(arg1) {
   return window['go']['main']['App']['OpenChatFile'](arg1);
 }
 
+export function OpenClipsFolder() {
+  return window['go']['main']['App']['OpenClipsFolder']();
+}
+
 export function OpenVideoFile() {
   return window['go']['main']['App']['OpenVideoFile']();
 }
 
 export function SaveFanslyConfig(arg1) {
   return window['go']['main']['App']['SaveFanslyConfig'](arg1);
+}
+
+export function SetClipStorageOption(arg1, arg2) {
+  return window['go']['main']['App']['SetClipStorageOption'](arg1, arg2);
 }

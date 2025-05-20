@@ -47,4 +47,9 @@ export interface VideoInfoNotUsed {
     filename: string;
 }
 
+export interface ClipResult {
+    success: boolean;
+    filePath: string;
+    errorMessage: string;
+}
 

@@ -14,8 +14,9 @@ import (
 	_ "time"
 
 	"FanslyArchivePlayer/backend/services"
-	_ "github.com/mattn/go-sqlite3"
+	//_ "github.com/mattn/go-sqlite3"
 	"github.com/pelletier/go-toml"
+	_ "modernc.org/sqlite"
 )
 
 // Service handles Fansly integration functionality

@@ -56,7 +56,7 @@ export default defineComponent({
       default: false
     }
   },
-  emits: ['update:currentTime'],
+  emits: ['update:currentTime', 'update:duration'],
   setup(props, { emit }) {
     const videoRef = ref<HTMLVideoElement | null>(null);
     const currentTime = ref(0);
@@ -94,6 +94,15 @@ export default defineComponent({
     const onVideoLoaded = () => {
       if (videoRef.value) {
         console.log('Video loaded, duration:', videoRef.value.duration);
+        // Emit the video duration when metadata is loaded
+        emit('update:duration', videoRef.value.duration);
+      }
+    };
+
+    // Method to seek to a specific time
+    const seekToTime = (time: number) => {
+      if (videoRef.value) {
+        videoRef.value.currentTime = time;
       }
     };
 
@@ -112,7 +121,8 @@ export default defineComponent({
       currentMessages,
       videoType,
       onTimeUpdate,
-      onVideoLoaded
+      onVideoLoaded,
+      seekToTime
     };
   }
 });
@@ -185,3 +195,4 @@ video {
   }
 }
 </style>
+

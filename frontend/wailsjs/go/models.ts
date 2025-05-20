@@ -201,3 +201,24 @@ export namespace models {
 
 }
 
+export namespace services {
+	
+	export class ClipResult {
+	    success: boolean;
+	    filePath: string;
+	    errorMessage?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ClipResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.filePath = source["filePath"];
+	        this.errorMessage = source["errorMessage"];
+	    }
+	}
+
+}
+

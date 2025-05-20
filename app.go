@@ -10,18 +10,21 @@ import (
 	_ "encoding/json"
 	_ "errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	_ "os/exec"
+	"path/filepath"
+	//	"runtime"
+	_ "runtime"
+	_ "strconv"
+	"strings"
+
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/pelletier/go-toml"
 	"github.com/sqweek/dialog"
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
-	"net/http"
-	"net/url"
-	"os"
-	_ "os/exec"
-	"path/filepath"
-	_ "runtime"
-	_ "strconv"
-	"strings"
 )
 
 // App struct
@@ -30,6 +33,7 @@ type App struct {
 	videoService      *services.VideoService
 	fileDialogService *services.FileDialogService
 	cacheService      *services.CacheService
+	clipService       *services.ClipService
 	integrations      *integrations.Manager
 	currentVideoPath  string
 	appDataDir        string
@@ -81,6 +85,7 @@ func NewApp() *App {
 		videoService:      services.NewVideoService(),
 		fileDialogService: services.NewFileDialogService(),
 		cacheService:      cacheService,
+		clipService:       services.NewClipService(appDataDir),
 		integrations:      integrations.NewManager(appDataDir, cacheService),
 		appDataDir:        appDataDir,
 	}
@@ -252,4 +257,84 @@ func decodeFilePath(encodedPath string) (string, error) {
 		return "", err
 	}
 	return decodedPath, nil
+}
+
+// CreateClip creates a video clip from the current video
+func (a *App) CreateClip(startTime float64, duration float64, title string) services.ClipResult {
+	if a.currentVideoPath == "" {
+		return services.ClipResult{Success: false, ErrorMessage: "No video is currently loaded"}
+	}
+
+	// Check if ffmpeg is available
+	_, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		return services.ClipResult{
+			Success:      false,
+			ErrorMessage: "FFmpeg is not installed or not in PATH. Please install FFmpeg to use the clip feature.",
+		}
+	}
+
+	return a.clipService.CreateClip(a.currentVideoPath, startTime, duration, title)
+}
+
+// GetClips returns a list of all saved clips
+func (a *App) GetClips() []string {
+	return a.clipService.GetClips()
+}
+
+// OpenClipsFolder opens the folder containing saved clips
+/*func (a *App) OpenClipsFolder() error {
+	clipsDir := filepath.Join(a.appDataDir, "clips")
+
+	// Create the directory if it doesn't exist
+	if _, err := os.Stat(clipsDir); os.IsNotExist(err) {
+		err = os.MkdirAll(clipsDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Open the directory using the system's default file explorer
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("explorer", clipsDir)
+	case "darwin":
+		cmd = exec.Command("open", clipsDir)
+	default: // Linux and others
+		cmd = exec.Command("xdg-open", clipsDir)
+	}
+
+	return cmd.Start()
+}*/
+
+// SetClipStorageOption sets where clips should be stored
+// SetClipStorageOption sets where clips should be stored
+func (a *App) SetClipStorageOption(option string, customDir string) error {
+	// Convert the string option to the ClipStorageOption type
+	var storageOption services.ClipStorageOption
+
+	switch option {
+	case "videos_dir":
+		storageOption = services.StoreInVideosDir
+	case "source_video_dir":
+		storageOption = services.StoreWithSourceVideo
+	case "custom_dir":
+		storageOption = services.StoreInCustomDir
+	default:
+		return fmt.Errorf("invalid storage option: %s", option)
+	}
+
+	a.clipService.SetStorageOption(storageOption, customDir)
+	return nil
+}
+
+// GetCurrentClipsDir returns the current directory where clips will be saved
+func (a *App) GetCurrentClipsDir() string {
+	return a.clipService.GetCurrentClipsDir(a.currentVideoPath)
+}
+
+// OpenClipsFolder opens the current clips folder in the file explorer
+func (a *App) OpenClipsFolder() error {
+	return a.clipService.OpenClipsFolder(a.currentVideoPath)
 }

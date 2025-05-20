@@ -36,6 +36,12 @@
         </button>
         <button @click="toggleSettings">{{ showSettings ? 'Hide Settings' : 'Show Settings' }}</button>
         <button @click="toggleRecentVideos">{{ showRecentVideos ? 'Hide Recent' : 'Recent Videos' }}</button>
+        <!-- In desktop-controls div -->
+        <button @click="toggleClipCreator" :disabled="!videoLoaded">
+          {{ showClipCreator ? 'Hide Clip Creator' : 'Create Clip' }}
+        </button>
+
+
         
         <!-- Integrations dropdown -->
         <div class="dropdown">
@@ -80,6 +86,10 @@
           </button>
           <button @click="toggleSettings">{{ showSettings ? 'Hide Settings' : 'Show Settings' }}</button>
           <button @click="toggleRecentVideos">{{ showRecentVideos ? 'Hide Recent' : 'Recent Videos' }}</button>
+          <!-- Also add to mobile-menu-buttons div -->
+          <button @click="toggleClipCreator" :disabled="!videoLoaded">
+            {{ showClipCreator ? 'Hide Clip Creator' : 'Create Clip' }}
+          </button>
           
           <!-- Mobile integrations submenu -->
           <div class="mobile-submenu">
@@ -106,7 +116,8 @@
     <div class="main-content" :class="{
       'with-settings': showSettings,
       'with-recent': showRecentVideos,
-      'with-integration': showFanslyBrowser || showAnyOtherIntegration
+      'with-integration': showFanslyBrowser || showAnyOtherIntegration,
+      'with-clip-creator': showClipCreator
     }">
       <div class="video-chat-container" :class="{ 
         'chat-hidden': !showChat, 
@@ -121,7 +132,7 @@
             :theaterMode="theaterMode"
             @update:currentTime="currentTime = $event"
           />
-        </div>
+        </div> 
         
         <div v-if="showChat && chatLoaded" class="chat-container" :style="chatContainerStyle">
           <ChatOverlay
@@ -137,6 +148,14 @@
         @update:theme="updateTheme"
         class="settings-container"
       />
+
+      <ClipCreator
+          v-if="showClipCreator"
+          :currentTime="currentTime"
+          :videoDuration="videoDuration"
+          @clip-loaded="handleClipLoaded"
+          class="clip-creator-container"
+        />
       
       <RecentVideos
         v-if="showRecentVideos"
@@ -197,6 +216,7 @@ import SettingsPanel from './components/SettingsPanel.vue';
 import ChatOverlay from './components/ChatOverlay.vue';
 import RecentVideos from './components/RecentVideos.vue';
 import FanslyBrowser from './components/FanslyBrowser.vue';
+import ClipCreator from './components/ClipCreator.vue';
 import { OpenVideoFile, OpenChatFile, GetVideoFileInfo, GetAllChatMessages, GetMessagesAtTime, LoadVideoFromPath } from '../wailsjs/go/main/App';
 import { ThemeSettings, RecentVideo } from './types';
 
@@ -219,7 +239,8 @@ export default defineComponent({
     SettingsPanel,
     ChatOverlay,
     RecentVideos,
-    FanslyBrowser
+    FanslyBrowser,
+    ClipCreator,
   },
   setup() {
     const videoSrc = ref('');
@@ -238,6 +259,9 @@ export default defineComponent({
     const mobileMenuOpen = ref(false);
     const showFanslyBrowser = ref(false);
     const accumulatedMessages = ref<any[]>([]);
+    // Inside the setup function
+    const showClipCreator = ref(false);
+    const videoDuration = ref(0);
     
     // Add this missing ref for chat messages
     const chatMessages = ref<any[]>([]);
@@ -247,6 +271,32 @@ export default defineComponent({
     const showMobileIntegrationsMenu = ref(false);
     const activeIntegration = ref('fansly');
     const showAnyOtherIntegration = ref(false); // For future integrations
+
+    // Toggle clip creator panel
+    const toggleClipCreator = () => {
+      showClipCreator.value = !showClipCreator.value;
+      
+      if (showClipCreator.value) {
+        showSettings.value = false;
+        showRecentVideos.value = false;
+        showFanslyBrowser.value = false;
+        showAnyOtherIntegration.value = false;
+        
+        // Close mobile menu if open
+        if (mobileMenuOpen.value) {
+          toggleMobileMenu();
+        }
+      }
+    };
+
+    // Handle when a clip is loaded from the clip creator
+    const handleClipLoaded = (videoPath: string) => {
+      videoSrc.value = videoPath;
+      videoLoaded.value = true;
+      
+      // Close clip creator panel
+      showClipCreator.value = false;
+    };
     
     // Toggle integrations dropdown menu
     const toggleIntegrationsMenu = () => {
@@ -802,7 +852,11 @@ export default defineComponent({
       showAnyOtherIntegration,
       toggleIntegrationPanel,
       resetVideoState,
-      resetPlayer
+      resetPlayer,
+      showClipCreator,
+      videoDuration,
+      toggleClipCreator,
+      handleClipLoaded,
     };
   }
 });
@@ -1439,5 +1493,41 @@ button:disabled {
 
 .integration-panel {
   height: 100%;
+}
+
+/* Add this to your existing styles */
+.clip-creator-container {
+  width: 350px; /* Same as other side panels */
+  overflow-y: auto;
+  padding: 10px;
+  border-left: 1px solid #313244; /* Catppuccin Mocha surface0 */
+  background-color: #181825; /* Catppuccin Mocha mantle */
+}
+
+.main-content.with-clip-creator .video-chat-container {
+  flex: 1;
+}
+
+/* Update the main-content class to include the clip creator */
+.main-content.with-settings,
+.main-content.with-recent,
+.main-content.with-integration,
+.main-content.with-clip-creator {
+  display: flex;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .main-content.with-clip-creator {
+    flex-direction: column;
+  }
+  
+  .clip-creator-container {
+    width: 100%;
+    height: 300px;
+    max-height: 40vh;
+    border-left: none;
+    border-top: 1px solid #313244;
+  }
 }
 </style>
