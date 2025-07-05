@@ -131,6 +131,7 @@
             :showChat="showChat && chatLoaded"
             :theaterMode="theaterMode"
             @update:currentTime="currentTime = $event"
+            @update:duration="videoDuration = $event"
           />
         </div> 
         
@@ -379,6 +380,7 @@ export default defineComponent({
       videoSrc.value = '';
       videoLoaded.value = false;
       currentTime.value = 0;
+      videoDuration.value = 0;
       
       // Reset chat-related state
       resetChat();

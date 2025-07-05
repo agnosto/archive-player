@@ -63,8 +63,8 @@ func (s *ClipService) CreateClip(sourceVideoPath string, startTime float64, dura
 	if sourceVideoPath == "" {
 		return ClipResult{Success: false, ErrorMessage: "No source video provided"}
 	}
-	if duration <= 0 || duration > 300 {
-		return ClipResult{Success: false, ErrorMessage: "Duration must be between 0 and 300 seconds (5 minutes)"}
+	if duration <= 0 {
+		return ClipResult{Success: false, ErrorMessage: "Duration must be a positive number"}
 	}
 
 	// Create a filename based on title or timestamp if title is empty

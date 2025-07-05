@@ -14,13 +14,13 @@
       </div>
       
       <div class="form-group">
-        <label>Clip Duration (max 5 minutes)</label>
+        <label>Clip Duration</label>
         <div class="duration-controls">
           <input
             type="range"
             v-model.number="clipDuration"
             min="1"
-            max="300"
+            :max="videoDuration > 0 ? Math.floor(videoDuration) : 300"
             step="1"
             @input="updateDuration"
           />
